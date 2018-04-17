@@ -1,0 +1,31 @@
+#include "mbed.h"
+
+
+Serial pc(USBTX, USBRX);
+I2C i2c(p9, p10); //I2C_SDA, I2C_SCL 
+
+int sensor_Address = 0x01; //7 bit address of MLX90614 Sensor
+int AmbientRegister = 0x06; //Set the sensor to ambient mode
+int ObjectRegister = 0x07;  //set the sensor to direct reading mode.
+
+float MLX90614_i2c_TempRead()
+{
+    char data[2] = {0};
+    //data[0] = AmbientRegister; //Switch between Ambient and Direct Reading
+    data[0] = ObjectRegister;
+    i2c.write(sensor_Address,data,1,true); //True = repeated start for this sensor
+    i2c.read(sensor_Address,data,2);
+    
+    return ( 0.02 * ((data[1]<<8) | data[0]) ) -273.15;
+}
+
+int main()
+{
+    float temp;
+    while(true)
+    {
+      temp = MLX90614_i2c_TempRead();
+      pc.printf("%4.2f Celcius\r\n", temp);
+      wait(1);
+    }
+}
